@@ -31,7 +31,7 @@ html { font-size: 18px; }              /* ~10% bigger than default 16px */
 
 /* Bump specific quiz sizes a bit */
 #prompt { font-size: 1.6rem; }         /* ~24px on 18px base */
-.opt { font-size: 1.15rem; }           /* ~20.7px */
+.opt { font-size: 1.15rem; font-weight: 300; } /* ~20.7px */
 #qnum { font-size: 1rem; opacity: .85; }
 
 </style>
@@ -84,29 +84,27 @@ const questions = [
     ["Design the smart plan and solve the tricky bits","ravenclaw"],
     ["Find the fastest path to a winning outcome","slytherin"]],
   ["Pick your ideal weekend:",
+    ["Hustle on a passion project or new idea","slytherin"],
     ["Adventure outdoors, try something daring","gryffindor"],
     ["Time with friends, food, and good vibes","hufflepuff"],
-    ["Puzzles, books, or learning a new skill","ravenclaw"],
-    ["Hustle on a passion project or new idea","slytherin"]],
+    ["Puzzles, books, or learning a new skill","ravenclaw"]],
   ["When faced with a challenge, you…",
-    ["Act decisively and adjust on the fly","gryffindor"],
-    ["Ask for help and support the team","hufflepuff"],
     ["Research deeply and think it through","ravenclaw"],
-    ["Look for a creative workaround","slytherin"]],
+    ["Look for a creative workaround","slytherin"],
+    ["Act decisively and adjust on the fly","gryffindor"],
+    ["Ask for help and support the team","hufflepuff"]],
   ["Choose the trait your friends would most agree with:",
-    ["Brave","gryffindor"],["Kind","hufflepuff"],["Clever","ravenclaw"],["Ambitious","slytherin"]],
+    ["Clever","ravenclaw"],["Brave","gryffindor"],["Ambitious","slytherin"],["Kind","hufflepuff"]],
   ["Pick a color you vibe with most:",
-    ["Red","gryffindor"],["Yellow","hufflepuff"],["Blue","ravenclaw"],["Green","slytherin"]],
+    ["Green","slytherin"],["Blue","ravenclaw"],["Red","gryffindor"],["Yellow","hufflepuff"]],
   ["What’s your go-to win?",
-    ["Doing the right thing even when it’s hard","gryffindor"],
-    ["Being there for others consistently","hufflepuff"],
-    ["Finding the smart solution","ravenclaw"],
-    ["Turning goals into results","slytherin"]],
+    ["Doing the right thing even when it’s hard","gryffindor"],["Turning goals into results","slytherin"],
+    ["Being there for others consistently","hufflepuff"],["Finding the smart solution","ravenclaw"]],
   ["Pick a motto:",
-    ["Fortune favors the bold","gryffindor"],
-    ["We go further together","hufflepuff"],
+    ["Greatness is a choice","slytherin"],
     ["Think deeply, act wisely","ravenclaw"],
-    ["Greatness is a choice","slytherin"]]
+    ["We go further together","hufflepuff"],
+   ["Fortune favors the bold","gryffindor"]]
 ];
 
 let idx = 0;
@@ -165,35 +163,6 @@ async function shareText(){
     await navigator.clipboard.writeText(msg);
     alert("Copied to clipboard!");
   }
-}
-function downloadCard(){
-  const c = $("cardCanvas");
-  const g = c.getContext("2d");
-  // background
-  const grd = g.createLinearGradient(0,0,c.width,c.height);
-  grd.addColorStop(0,"#0b0b12"); grd.addColorStop(1,"#4b237a");
-  g.fillStyle = grd; g.fillRect(0,0,c.width,c.height);
-
-  const key = topHouse();
-  // title
-  g.fillStyle = "#ffffff"; g.font = "bold 46px system-ui, -apple-system, Segoe UI";
-  g.fillText("Potter & Potions Night", 40, 80);
-  // house
-  g.fillStyle = houses[key].color; g.font = "bold 84px system-ui, -apple-system";
-  g.fillText(houses[key].title, 40, 200);
-  // blurb
-  g.fillStyle = "#ffffff"; g.font = "36px system-ui, -apple-system";
-  wrap(g, houses[key].blurb, 40, 260, 820, 44);
-  // donate URL
-  g.font = "28px system-ui, -apple-system";
-  g.fillStyle = "#ffd94d";
-  g.fillText("Support Team “Play with a Purpose”", 40, 1050);
-  g.fillStyle = "#ffffff";
-  g.fillText(DONATE_URL, 40, 1100);
-
-  const url = c.toDataURL("image/png");
-  const a = document.createElement("a");
-  a.href = url; a.download = "house-result.png"; a.click();
 }
 function wrap(ctx, text, x, y, maxWidth, lineHeight){
   const words = text.split(" "); let line = "";
