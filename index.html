@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<meta name="theme-color" content="#3b0066">
+<title>Potter & Potions Night – House Quiz</title>
+<style>
+  :root { --bg1:#0b0b12; --bg2:#4b237a; --accent:#ffd94d; --text:#ffffff; }
+  html,body { margin:0; height:100%; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; background: linear-gradient(135deg,var(--bg1),var(--bg2)); color:var(--text);}
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px;}
+  h1,h2 { margin: 0 0 10px }
+  .card { background: rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; backdrop-filter: blur(6px);}
+  button { border:0; border-radius:12px; padding:12px 16px; cursor:pointer; font-weight:700 }
+  .btn { background: rgba(255,255,255,0.14); color:#fff; }
+  .btn-accent { background: var(--accent); color:#000; }
+  .grid { display:grid; gap:10px }
+  .opt { display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:12px; background: rgba(255,255,255,0.1); }
+  .hide { display:none }
+  .center { text-align:center }
+  .qrbox { background:#fff; padding:8px; border-radius:12px; display:inline-block }
+  canvas { display:block; margin:0 auto }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="intro">
+    <h1>Potter &amp; Potions Night</h1>
+    <p>Which Hogwarts house fits you best? Quick 7-question fan quiz. Fully offline after install.</p>
+    <p><small>Not affiliated with J.K. Rowling or Warner Bros.</small></p>
+    <div class="grid" style="grid-template-columns: 1fr 1fr">
+      <button class="btn" onclick="start()">Start Quiz</button>
+      <button class="btn-accent" onclick="openDonate()">Donate</button>
+    </div>
+  </div>
+
+  <div id="quiz" class="card hide">
+    <p id="qnum" style="opacity:.8"></p>
+    <h2 id="prompt"></h2>
+    <div id="options" class="grid"></div>
+  </div>
+
+  <div id="result" class="card hide center">
+    <p>You identify most with</p>
+    <h2 id="house"></h2>
+    <p id="blurb"></p>
+    <div class="grid" style="grid-template-columns: 1fr 1fr; margin-top:10px">
+      <button class="btn" onclick="resetQuiz()">Retake</button>
+      <button class="btn-accent" onclick="shareText()">Share</button>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn" onclick="downloadCard()">Download Result Card (PNG)</button>
+    </div>
+    <p style="margin-top:14px"><small>Support Team “Play with a Purpose”</small></p>
+    <div class="qrbox"><span>teamkidney.rallybound.org/Playwithapurpose</span></div>
+    <p style="margin-top:12px"><small>Want the iPad app too? <a href="README.txt">See the native app guide</a>.</small></p>
+  </div>
+
+  <canvas id="cardCanvas" width="900" height="1200" class="hide"></canvas>
+</div>
+
+<script>
+const DONATE_URL = "https://teamkidney.rallybound.org/Playwithapurpose";
+const houses = {
+  gryffindor: { title: "Gryffindor", color: "#ff3b30", blurb: "Courageous, bold, and willing to act when it counts." },
+  hufflepuff: { title: "Hufflepuff", color: "#ffd60a", blurb: "Kind, steady, and tirelessly loyal to your people." },
+  ravenclaw:  { title: "Ravenclaw", color: "#0a84ff", blurb: "Curious, clever, and driven by ideas and insight." },
+  slytherin:  { title: "Slytherin", color: "#34c759", blurb: "Resourceful, ambitious, and determined to achieve." }
+};
+const questions = [
+  ["In a group project, which role do you naturally take?",
+    ["Lead the charge and keep the momentum up","gryffindor"],
+    ["Make sure everyone is included and we finish well","hufflepuff"],
+    ["Design the smart plan and solve the tricky bits","ravenclaw"],
+    ["Find the fastest path to a winning outcome","slytherin"]],
+  ["Pick your ideal weekend:",
+    ["Adventure outdoors, try something daring","gryffindor"],
+    ["Time with friends, food, and good vibes","hufflepuff"],
+    ["Puzzles, books, or learning a new skill","ravenclaw"],
+    ["Hustle on a passion project or new idea","slytherin"]],
+  ["When faced with a challenge, you…",
+    ["Act decisively and adjust on the fly","gryffindor"],
+    ["Ask for help and support the team","hufflepuff"],
+    ["Research deeply and think it through","ravenclaw"],
+    ["Look for a creative workaround","slytherin"]],
+  ["Choose the trait your friends would most agree with:",
+    ["Brave","gryffindor"],["Kind","hufflepuff"],["Clever","ravenclaw"],["Ambitious","slytherin"]],
+  ["Pick a color you vibe with most:",
+    ["Red","gryffindor"],["Yellow","hufflepuff"],["Blue","ravenclaw"],["Green","slytherin"]],
+  ["What’s your go-to win?",
+    ["Doing the right thing even when it’s hard","gryffindor"],
+    ["Being there for others consistently","hufflepuff"],
+    ["Finding the smart solution","ravenclaw"],
+    ["Turning goals into results","slytherin"]],
+  ["Pick a motto:",
+    ["Fortune favors the bold","gryffindor"],
+    ["We go further together","hufflepuff"],
+    ["Think deeply, act wisely","ravenclaw"],
+    ["Greatness is a choice","slytherin"]]
+];
+
+let idx = 0;
+const scores = {gryffindor:0,hufflepuff:0,ravenclaw:0,slytherin:0};
+
+function $(id){ return document.getElementById(id); }
+function start(){
+  $("intro").classList.add("hide");
+  $("quiz").classList.remove("hide");
+  idx = 0; for (const k in scores) scores[k]=0;
+  renderQuestion();
+}
+function renderQuestion(){
+  $("qnum").textContent = `Question ${idx+1} of ${questions.length}`;
+  const [prompt, ...opts] = questions[idx];
+  $("prompt").textContent = prompt;
+  const box = $("options"); box.innerHTML = "";
+  opts.forEach(([text, house])=>{
+    const div = document.createElement("button");
+    div.className = "opt";
+    div.innerHTML = `<span style="opacity:.6">●</span><div>${text}</div>`;
+    div.onclick = ()=>select(house);
+    box.appendChild(div);
+  });
+}
+function select(house){
+  scores[house]++; idx++;
+  if (idx < questions.length) renderQuestion();
+  else showResult();
+}
+function topHouse(){
+  return Object.keys(scores).sort((a,b)=>{
+    if (scores[b]!==scores[a]) return scores[b]-scores[a];
+    return a.localeCompare(b);
+  })[0];
+}
+function showResult(){
+  $("quiz").classList.add("hide");
+  $("result").classList.remove("hide");
+  const key = topHouse();
+  $("house").textContent = houses[key].title;
+  $("house").style.color = houses[key].color;
+  $("blurb").textContent = houses[key].blurb;
+}
+function resetQuiz(){
+  $("result").classList.add("hide");
+  $("intro").classList.remove("hide");
+}
+function openDonate(){ window.open(DONATE_URL, "_blank"); }
+async function shareText(){
+  const key = topHouse();
+  const msg = `I took the Wizarding House Quiz at Potter & Potions Night and got ${houses[key].title}! Donate: ${DONATE_URL}`;
+  if (navigator.share){
+    try { await navigator.share({text: msg}); } catch(e){}
+  } else {
+    await navigator.clipboard.writeText(msg);
+    alert("Copied to clipboard!");
+  }
+}
+function downloadCard(){
+  const c = $("cardCanvas");
+  const g = c.getContext("2d");
+  // background
+  const grd = g.createLinearGradient(0,0,c.width,c.height);
+  grd.addColorStop(0,"#0b0b12"); grd.addColorStop(1,"#4b237a");
+  g.fillStyle = grd; g.fillRect(0,0,c.width,c.height);
+
+  const key = topHouse();
+  // title
+  g.fillStyle = "#ffffff"; g.font = "bold 46px system-ui, -apple-system, Segoe UI";
+  g.fillText("Potter & Potions Night", 40, 80);
+  // house
+  g.fillStyle = houses[key].color; g.font = "bold 84px system-ui, -apple-system";
+  g.fillText(houses[key].title, 40, 200);
+  // blurb
+  g.fillStyle = "#ffffff"; g.font = "36px system-ui, -apple-system";
+  wrap(g, houses[key].blurb, 40, 260, 820, 44);
+  // donate URL
+  g.font = "28px system-ui, -apple-system";
+  g.fillStyle = "#ffd94d";
+  g.fillText("Support Team “Play with a Purpose”", 40, 1050);
+  g.fillStyle = "#ffffff";
+  g.fillText(DONATE_URL, 40, 1100);
+
+  const url = c.toDataURL("image/png");
+  const a = document.createElement("a");
+  a.href = url; a.download = "house-result.png"; a.click();
+}
+function wrap(ctx, text, x, y, maxWidth, lineHeight){
+  const words = text.split(" "); let line = "";
+  for (let n=0;n<words.length;n++){
+    const test = line + words[n] + " ";
+    if (ctx.measureText(test).width > maxWidth){ ctx.fillText(line, x, y); line = words[n]+" "; y += lineHeight; }
+    else line = test;
+  }
+  ctx.fillText(line, x, y);
+}
+
+// register SW
+if ("serviceWorker" in navigator){
+  window.addEventListener("load", ()=> navigator.serviceWorker.register("service-worker.js"));
+}
+</script>
+</body>
+</html>

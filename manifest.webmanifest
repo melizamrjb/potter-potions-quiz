@@ -1,0 +1,20 @@
+{
+  "name": "Potter & Potions Night \u2013 House Quiz",
+  "short_name": "House Quiz",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#3b0066",
+  "background_color": "#0b0b12",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
