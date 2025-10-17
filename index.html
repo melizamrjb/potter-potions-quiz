@@ -23,6 +23,17 @@
   .qrbox { background:#fff; padding:8px; border-radius:12px; display:inline-block }
   canvas { display:block; margin:0 auto }
   a { color: var(--accent); }
+  /* Make all quiz text white (explicit) */
+.card, .card h1, .card h2, .card p, .opt, .opt div, #qnum, #prompt { color: #fff; }
+
+/* Slightly larger base font */
+html { font-size: 18px; }              /* ~10% bigger than default 16px */
+
+/* Bump specific quiz sizes a bit */
+#prompt { font-size: 1.6rem; }         /* ~24px on 18px base */
+.opt { font-size: 1.15rem; }           /* ~20.7px */
+#qnum { font-size: 1rem; opacity: .85; }
+
 </style>
 </head>
 <body>
